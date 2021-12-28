@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 from is_wire.rpc import ServiceProvider, LogInterceptor
-from is_wire.core import Channel, Message, Subscription, StatusCode, Status, Logger
+from is_wire.core import Channel, Subscription, StatusCode, Status, Logger
 from google.protobuf.empty_pb2 import Empty
 from google.protobuf.struct_pb2 import Struct
 from is_msgs.common_pb2 import Position
@@ -66,12 +66,12 @@ def getPosition(struct_id,ctx):
     log.info('Validating arguments...')
     sleep(0.5)
     if robot is not None:
-        robot_request = Position()
-        robot_request.x, robot_request.y = robot.getPosition()
-        log.info(f'ROBOT ID {robot.getId()} -X: {robot_request.x}  -Y: {robot_request.y}')
+        robot_reply = Position()
+        robot_reply.x, robot_reply.y = robot.getPosition()
+        log.info(f'ROBOT ID {robot.getId()} -X: {robot_reply.x}  -Y: {robot_reply.y}')
         log.info('Sending GET POSITION reply...')
         sleep(1)
-        return robot_request
+        return robot_reply
 
     else:
         log.error(f"Robot {id} not found")
@@ -98,8 +98,8 @@ def setPosition(request_msg,ctx):
         log.error(f"Robot {id} not found")
         return Status(StatusCode.NOT_FOUND, "ROBOT ID not found.")
 
-channel = Channel("amqp://guest:guest@localhost:5672")
-subscription = Subscription(channel)
+config = json.load(open('../config/config.json', 'r'))
+channel = Channel(config["broker.channel"])
 provider = ServiceProvider(channel)
 logging = LogInterceptor()
 provider.add_interceptor(logging)

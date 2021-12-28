@@ -2,12 +2,12 @@ import sys
 sys.path.append('..')
 from is_wire.rpc import ServiceProvider, LogInterceptor
 from is_wire.core import Channel, Message, Subscription, StatusCode, Status, Logger
-from google.protobuf.empty_pb2 import Empty
 from is_msgs.common_pb2 import Position
 from is_msgs.robot_pb2 import RobotTaskRequest
 from google.protobuf.struct_pb2 import Struct
 from msgs.RequisicaoRobo_pb2 import RequisicaoRobo
 import random
+import json
 import socket
 from time import sleep
 
@@ -89,7 +89,7 @@ def sysInitMsg():
         userMessage = userMessage.body.decode('latin1')
         if userMessage == "Ligar Sistema":
             log.info('Message Received. Checking content and trying to bring the system online...')
-
+            sleep(1)
             if random_number == 1:
                 log.info('SYSTEM ONLINE')
                 notifyMessage = Message()
@@ -105,7 +105,8 @@ def sysInitMsg():
                 channel.publish(notifyMessage, topic="Controle.Console.Robot")
 
 
-channel = Channel("amqp://guest:guest@localhost:5672")
+config = json.load(open('../config/config.json', 'r'))
+channel = Channel(config['broker.channel'])
 subscription = Subscription(channel)
 subscription.subscribe(topic="Controle.Console.User")
 provider = ServiceProvider(channel)

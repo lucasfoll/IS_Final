@@ -4,6 +4,7 @@ from is_wire.core import Channel, Message, Subscription, Logger
 from msgs.RequisicaoRobo_pb2 import RequisicaoRobo
 import random
 import socket
+import json
 from time import sleep
 
 functions = ['get_position', 'set_position']
@@ -13,7 +14,8 @@ log = Logger(name='User')
 userMessage = Message()
 userMessage.body = "Ligar Sistema".encode('latin1')
 
-channel = Channel("amqp://guest:guest@localhost:5672")
+config = json.load(open('../config/config.json', 'r'))
+channel = Channel(config['broker.channel'])
 subscription = Subscription(channel)
 subscription.subscribe(topic="Controle.Console.Robot")
 
@@ -58,8 +60,9 @@ while True:
                     log.info(f'x = {req_robo_reply.positions.x}, y = {req_robo_reply.positions.y}')
                 else:
                     log.info(f'SET_POSITION REPLY FOR ROBOT ID {robot_request_msg.id}')
+                    log.info(f'{reply.status.code}')
             else:
-                log.warn(f'{reply.status.code}')
+                log.error(f'{reply.status.code}')
 
         except socket.timeout:
             log.warn('No reply')
